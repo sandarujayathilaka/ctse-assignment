@@ -1,0 +1,50 @@
+# Dependency directories
+node_modules
+npm-debug.log
+
+# Environment variables
+.env
+.env.*
+
+# Version control
+.git
+.gitignore
+
+# Testing
+coverage
+.nyc_output
+tests
+
+# IDE specific files
+.idea
+.vscode
+*.swp
+*.swo
+
+# Documentation files
+README.md
+CHANGELOG.md
+docs/
+
+# Logs
+logs
+*.log
+
+# Docker files (to avoid recursive copying)
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Build output
+dist/
+build/
+
+# Local data
+data/
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
