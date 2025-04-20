@@ -690,6 +690,8 @@ resource "aws_ecs_service" "auth_service" {
   task_definition = aws_ecs_task_definition.auth_service.arn
   desired_count   = 1  # Reduced for Free Tier
   launch_type     = "EC2"  # Changed from FARGATE to EC2
+  force_new_deployment = true  # Add this line
+
 
   # No need for network_configuration with bridge mode
   

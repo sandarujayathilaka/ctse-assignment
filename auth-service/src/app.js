@@ -81,7 +81,7 @@ app.use("/api/admin", adminRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
+  res.status(200).json({ status: "ok!" });
 });
 
 // Datadog health check endpoint
