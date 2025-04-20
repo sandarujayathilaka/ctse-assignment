@@ -1,0 +1,82 @@
+<!-- account-deleted-email.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Account Has Been Deleted</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        background-color: #4a6ee0;
+        padding: 20px;
+        text-align: center;
+      }
+      .header h1 {
+        color: white;
+        margin: 0;
+      }
+      .content {
+        padding: 20px;
+        background-color: #fff;
+      }
+      .info-box {
+        padding: 15px;
+        background-color: #e6f3ff;
+        border-radius: 4px;
+        margin: 20px 0;
+      }
+      .footer {
+        text-align: center;
+        padding: 20px;
+        font-size: 12px;
+        color: #888;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>{{CompanyName}}</h1>
+      </div>
+      <div class="content">
+        <h2>Account Deletion Notification</h2>
+        <p>Hello {{username}},</p>
+        <p>
+          This email is to inform you that your account with {{CompanyName}} has
+          been deleted by an administrator.
+        </p>
+
+        {{#if reason}}
+        <div class="info-box">
+          <p><strong>Reason for deletion:</strong> {{reason}}</p>
+        </div>
+        {{/if}}
+
+        <p>
+          If you have any questions regarding this action or would like to
+          discuss this further, please contact our support team.
+        </p>
+
+        <p>We appreciate your past engagement with our service.</p>
+
+        <p>Thank you,<br />The {{CompanyName}} Team</p>
+      </div>
+      <div class="footer">
+        <p>&copy; {{year}} {{CompanyName}}. All rights reserved.</p>
+        <p>For support, contact us at {{ContactEmail}}</p>
+      </div>
+    </div>
+  </body>
+</html>
