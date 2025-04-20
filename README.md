@@ -4,18 +4,38 @@ A secure, scalable authentication microservice built with Node.js, Express, and 
 
 ## Features
 
-- User registration and authentication
-- JWT-based authentication
-- Password reset functionality
-- Secure password storage with bcrypt
-- Input validation and sanitization
-- Rate limiting to prevent attacks
-- Comprehensive error handling
-- Logging with Winston
-- Security headers with Helmet
-- Containerized with Docker
-- CI/CD pipeline with GitHub Actions
-- Deployment on AWS ECS Fargate
+- **User Authentication**
+
+  - Registration with email verification
+  - JWT-based authentication
+  - Optional two-factor authentication (OTP)
+  - Password reset functionality
+  - Account activation workflow
+  - Refresh token mechanism
+  - Role-based access control (User, Admin, Superadmin)
+
+- **Security Measures**
+
+  - Password hashing with bcrypt
+  - JWT authentication with short-lived tokens
+  - Rate limiting to prevent brute force attacks
+  - Input validation and sanitization
+  - CORS protection with configurable origins
+  - Security headers with Helmet middleware
+  - Account locking after failed login attempts
+  - OTP for two-factor authentication
+  - Secret management using AWS Secrets Manager
+
+- **DevOps & Infrastructure**
+  - CI/CD pipeline with GitHub Actions
+  - Containerization with Docker multi-stage builds
+  - Container Registry with Amazon ECR
+  - Orchestration with AWS ECS
+  - Infrastructure as Code with Terraform
+  - Monitoring with Datadog and CloudWatch
+  - Security scanning with Snyk
+  - Comprehensive testing with Jest
+  - AWS IAM roles with least privilege principles
 
 ## Architecture
 
@@ -31,36 +51,87 @@ The microservice follows a layered architecture:
 
 ## API Endpoints
 
-| Method | Endpoint                        | Description            | Authentication Required |
-| ------ | ------------------------------- | ---------------------- | ----------------------- |
-| POST   | /api/auth/register              | Register a new user    | No                      |
-| POST   | /api/auth/login                 | Authenticate user      | No                      |
-| GET    | /api/auth/me                    | Get current user       | Yes                     |
-| POST   | /api/auth/forgot-password       | Request password reset | No                      |
-| POST   | /api/auth/reset-password/:token | Reset password         | No                      |
-| POST   | /api/auth/validate-token        | Validate JWT token     | Yes                     |
-| GET    | /health                         | Health check endpoint  | No                      |
+| Method | Endpoint                            | Description               | Authentication Required | Access Roles      |
+| ------ | ----------------------------------- | ------------------------- | ----------------------- | ----------------- |
+| POST   | /api/auth/register                  | Register a new user       | No                      | Public            |
+| GET    | /api/auth/activate/:token           | Activate account          | No                      | Public            |
+| POST   | /api/auth/login                     | Authenticate user         | No                      | Public            |
+| POST   | /api/auth/verify-otp                | Verify OTP code           | No                      | Public            |
+| POST   | /api/auth/refresh-token             | Refresh access token      | No (refresh token)      | Public            |
+| POST   | /api/auth/logout                    | Log out user              | Yes                     | All               |
+| GET    | /api/auth/me                        | Get current user          | Yes                     | All               |
+| POST   | /api/auth/forgot-password           | Request password reset    | No                      | Public            |
+| POST   | /api/auth/reset-password/:token     | Reset password            | No                      | Public            |
+| POST   | /api/auth/validate-token            | Validate JWT token        | Yes                     | All               |
+| GET    | /api/admin/users                    | Get all users (paginated) | Yes                     | Admin, Superadmin |
+| GET    | /api/admin/users/:id                | Get specific user         | Yes                     | Admin, Superadmin |
+| POST   | /api/admin/users                    | Create user (by admin)    | Yes                     | Admin, Superadmin |
+| PUT    | /api/admin/users/:id                | Update user               | Yes                     | Admin, Superadmin |
+| DELETE | /api/admin/users/:id                | Delete user               | Yes                     | Admin, Superadmin |
+| POST   | /api/admin/users/:id/reset-password | Reset user password       | Yes                     | Admin, Superadmin |
+| GET    | /health                             | Health check endpoint     | No                      | Public            |
+| GET    | /datadog-health                     | Datadog health check      | No                      | Public            |
+| GET    | /api/status                         | API status                | No                      | Public            |
 
-## Security Measures
+## CI/CD Pipeline
 
-- **Password Hashing**: Using bcrypt with salt rounds
-- **JWT Authentication**: Short-lived tokens
-- **Rate Limiting**: Prevents brute force attacks
-- **Input Validation**: Using express-validator
-- **CORS Protection**: Configurable origins
-- **Security Headers**: Using Helmet middleware
-- **Secret Management**: Using AWS Secrets Manager in production
-- **Least Privilege**: IAM roles with minimal permissions
-- **Security Scanning**: Using Snyk for vulnerability detection
+The GitHub Actions workflow includes:
 
-## DevOps Practices
+1. **Build & Test**: Run tests and linting
+2. **Security Scan**: Analyze code for vulnerabilities using Snyk
+3. **Build & Push**: Create Docker image and push to ECR
+4. **Deploy**: Update ECS service with new deployment
 
-- **CI/CD Pipeline**: Automated build, test, and deployment
-- **Containerization**: Docker multi-stage builds
-- **Container Registry**: Amazon ECR
-- **Container Orchestration**: AWS ECS Fargate
-- **Infrastructure as Code**: AWS resources defined in code
-- **DevSecOps**: Security scanning with Snyk
+```yaml
+# Pipeline steps
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "auth-service/**"
+      - ".github/workflows/ci-cd.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "auth-service/**"
+      - ".github/workflows/ci-cd.yml"
+
+jobs:
+  build-and-test:
+    # Test job
+
+  build-and-push-image:
+    # Build and push Docker image job
+
+  deploy:
+    # Deployment job
+```
+
+## Deployment Architecture
+
+The microservice is deployed to AWS using the following components:
+
+- **VPC**: Isolated network with public subnets
+- **ECS Cluster**: Container orchestration
+- **EC2 Instances**: Hosts for containers (t2.micro for cost efficiency)
+- **Application Load Balancer**: For traffic routing
+- **ECR Repository**: For storing Docker images
+- **CloudWatch**: For logs and monitoring
+- **Parameter Store**: For secrets and configuration
+- **Datadog Integration**: Advanced monitoring and alerting
+
+## Monitoring and Observability
+
+The service includes comprehensive monitoring:
+
+- **Datadog APM**: For performance monitoring
+- **Datadog Metrics**: Custom dashboard for service health
+- **Datadog Alerts**: Configured for service health and error rates
+- **Winston Logging**: Structured logging for application events
+- **CloudWatch Logs**: Container and application logs
+- **Health Endpoints**: For service monitoring
 
 ## Getting Started
 
@@ -69,6 +140,8 @@ The microservice follows a layered architecture:
 - Node.js 18+
 - MongoDB
 - Docker and Docker Compose (for containerized development)
+- AWS CLI (for deployment)
+- Terraform (for infrastructure provisioning)
 
 ### Local Development
 
@@ -82,6 +155,7 @@ cd auth-microservice
 2. Install dependencies
 
 ```bash
+cd auth-service
 npm install
 ```
 
@@ -110,27 +184,59 @@ docker-compose up
 npm test
 ```
 
-## Cloud Deployment
+## Terraform Deployment
 
-The microservice is designed to be deployed on AWS ECS (Elastic Container Service) using Fargate, a serverless compute engine.
+The project includes Terraform configurations for AWS deployment:
 
-### AWS Resources Used
+1. Configure AWS credentials
+2. Create a `terraform.tfvars` file based on the example
+3. Apply the Terraform configuration
 
-- **ECR**: For storing Docker images
-- **ECS with Fargate**: For container orchestration without managing servers
-- **Application Load Balancer**: For routing HTTP traffic
-- **Parameter Store**: For secret management
-- **CloudWatch**: For logs and monitoring
-- **IAM Roles**: For secure access management
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your values
 
-## CI/CD Pipeline
+terraform init
+terraform plan
+terraform apply
+```
 
-The GitHub Actions workflow includes:
+## Project Structure
 
-1. **Build & Test**: Run tests and linting
-2. **Security Scan**: Analyze code for vulnerabilities using Snyk
-3. **Build & Push**: Create Docker image and push to ECR
-4. **Deploy**: Update ECS service with new task definition
+```
+.
+├── .github/workflows      # CI/CD pipeline definitions
+├── auth-service           # Main application code
+│   ├── src                # Source code
+│   │   ├── config         # Application configuration
+│   │   ├── controllers    # Request handlers
+│   │   ├── middleware     # Express middleware
+│   │   ├── models         # Mongoose models
+│   │   ├── routes         # API routes
+│   │   ├── templates      # Email templates
+│   │   ├── tests          # Test files
+│   │   └── utils          # Utility functions
+│   ├── .env.example       # Example environment variables
+│   ├── Dockerfile         # Docker configuration
+│   └── package.json       # Node.js dependencies
+└── terraform              # Infrastructure as Code
+    ├── main.tf            # Main Terraform configuration
+    ├── variables.tf       # Variable definitions
+    └── datadog.tf         # Datadog integration
+```
+
+## Security Considerations
+
+- **Least Privilege**: IAM roles with minimal permissions
+- **Secret Management**: Using AWS Parameter Store for secrets
+- **Container Security**: Multi-stage Docker builds
+- **Dependency Scanning**: Snyk integration
+- **Rate Limiting**: Prevents abuse and DDoS attacks
+- **Input Validation**: All user inputs are validated
+- **HTTPS**: Load balancer configured for secure communication
+- **Password Policies**: Enforced password complexity
+- **Account Lockout**: After failed login attempts
 
 ## License
 
