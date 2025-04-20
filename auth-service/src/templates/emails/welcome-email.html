@@ -1,0 +1,76 @@
+<!-- welcome-email.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to the Platform</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        background-color: #4a6ee0;
+        padding: 20px;
+        text-align: center;
+      }
+      .header h1 {
+        color: white;
+        margin: 0;
+      }
+      .content {
+        padding: 20px;
+        background-color: #fff;
+      }
+      .button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 20px 0;
+        background-color: #4a6ee0;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+      .footer {
+        text-align: center;
+        padding: 20px;
+        font-size: 12px;
+        color: #888;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>{{CompanyName}}</h1>
+      </div>
+      <div class="content">
+        <h2>Welcome to the Platform</h2>
+        <p>Hello {{username}},</p>
+        <p>Your account has been created successfully by an administrator.</p>
+        <p>
+          You can now log in using your email and the password provided to you.
+        </p>
+        <p>
+          If you have any questions or need assistance, please don't hesitate to
+          contact our support team.
+        </p>
+        <p>Thank you,<br />The {{CompanyName}} Team</p>
+      </div>
+      <div class="footer">
+        <p>&copy; {{year}} {{CompanyName}}. All rights reserved.</p>
+        <p>For support, contact us at {{ContactEmail}}</p>
+      </div>
+    </div>
+  </body>
+</html>
