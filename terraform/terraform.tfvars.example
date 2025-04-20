@@ -1,0 +1,37 @@
+# AWS region to deploy resources to
+aws_region = ""
+
+# MongoDB connection URI (use MongoDB Atlas free tier)
+mongo_uri = ""
+
+# Secret key for JWT token generation (generate a strong random string)
+# Example: use `openssl rand -hex 32` to generate
+jwt_secret = ""
+
+# Deployment environment
+environment = "development"
+
+# Application name
+app_name = "auth-service"
+
+# Set to 1 for free tier
+desired_count = 1
+
+# Use t2.micro for Free Tier
+instance_type = "t2.micro"
+
+# Datadog credentials
+datadog_api_key = ""
+datadog_app_key = ""
+
+# Email configuration
+email_host = "smtp.gmail.com"
+email_port = 587
+email_secure = false
+email_user = "org.info@gmail.com"
+email_pass = "ksfxwcb"  # This should be an app password for Gmail
+email_from = "org.info@gmail.com"
+
+# OTP settings
+require_otp = false
+skip_otp = true

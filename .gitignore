@@ -39,3 +39,15 @@ data/
 # Windows
 Thumbs.db
 ehthumbs.db
+
+# Terraform
+*.tfvars
+*.tfstate
+*.tfstate.backup
+*.tfplan
+tfplan
+.terraform/
+.terraform.lock.hcl
+.terraformrc
+terraform.rc
+crash.log
