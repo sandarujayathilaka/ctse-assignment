@@ -55,13 +55,13 @@ variable "desired_count" {
 variable "cpu" {
   description = "CPU units for the task"
   type        = string
-  default     = "900"  # Minimum value
+  default     = "256"  # Minimum value
 }
 
 variable "memory" {
   description = "Memory for the task"
   type        = string
-  default     = "900"  # Minimum value
+  default     = "512"  # Minimum value
 }
 
 variable "instance_type" {

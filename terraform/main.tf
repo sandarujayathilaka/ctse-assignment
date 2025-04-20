@@ -429,11 +429,37 @@ resource "aws_launch_template" "ecs" {
     name = aws_iam_instance_profile.ecs.name
   }
   
+
+  # Set proper ECS agent configuration
   user_data = base64encode(<<EOF
 #!/bin/bash
 echo ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config
+echo ECS_RESERVED_MEMORY=128 >> /etc/ecs/ecs.config
+echo ECS_CONTAINER_STOP_TIMEOUT=30s >> /etc/ecs/ecs.config
+echo ECS_DISABLE_PRIVILEGED=true >> /etc/ecs/ecs.config
+echo ECS_ENABLE_SPOT_INSTANCE_DRAINING=false >> /etc/ecs/ecs.config
+echo ECS_ENABLE_TASK_IAM_ROLE=true >> /etc/ecs/ecs.config
 EOF
   )
+
+  # Enable detailed monitoring
+  monitoring {
+    enabled = true
+  }
+  
+  # EBS optimized if available
+  ebs_optimized = true
+  
+  # Block device mappings
+  block_device_mappings {
+    device_name = "/dev/xvda"
+    
+    ebs {
+      volume_size = 30
+      volume_type = "gp3"
+      delete_on_termination = true
+    }
+  }
   
   tag_specifications {
     resource_type = "instance"
@@ -468,13 +494,33 @@ data "aws_ami" "amazon_linux_ecs" {
 resource "aws_autoscaling_group" "ecs" {
   name                = "${var.app_name}-ecs-asg"
   min_size            = 1
-  max_size            = 1  # Limit to 1 instance for free tier
+  max_size            = 2  # Limit to 1 instance for free tier
   desired_capacity    = 1
   vpc_zone_identifier = [aws_subnet.public_a.id, aws_subnet.public_b.id]
   
   launch_template {
     id      = aws_launch_template.ecs.id
     version = "$Latest"
+  }
+
+  # Instance Maintenance Policy
+  instance_maintenance_policy {
+    min_healthy_percentage = 50
+    max_healthy_percentage = 150
+  }
+  
+  # Health check
+  health_check_type         = "ELB"
+  health_check_grace_period = 300
+  
+  # Warm pool for faster scaling
+  warm_pool {
+    pool_state                  = "Stopped"
+    min_size                    = 0
+    max_group_prepared_capacity = 1
+    instance_reuse_policy {
+      reuse_on_scale_in = true
+    }
   }
   
   tag {
@@ -486,6 +532,12 @@ resource "aws_autoscaling_group" "ecs" {
   tag {
     key                 = "Environment"
     value               = var.environment
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "AmazonECSManaged"
+    value               = "true"
     propagate_at_launch = true
   }
 }
@@ -672,8 +724,8 @@ resource "aws_ecs_task_definition" "auth_service" {
         startPeriod = 120
       }
       # Reduced memory/CPU for t2.micro
-      memory            = 900  # Hard limit
-      cpu               = 900  # Soft limit
+      memory            = 512  # Hard limit
+      cpu               = 256  # Soft limit
     }
   ])
 
@@ -691,7 +743,6 @@ resource "aws_ecs_service" "auth_service" {
   desired_count   = 1  # Reduced for Free Tier
   launch_type     = "EC2"  # Changed from FARGATE to EC2
   force_new_deployment = true  # Add this line
-
 
   # No need for network_configuration with bridge mode
   
