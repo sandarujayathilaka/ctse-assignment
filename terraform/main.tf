@@ -387,6 +387,18 @@ resource "aws_ssm_parameter" "skip_otp" {
   }
 }
 
+resource "aws_ssm_parameter" "site_url" {
+  name        = "/${var.app_name}/SITE_URL"
+  description = "Site URL for email links"
+  type        = "String"
+  value       = "http://${aws_lb.main.dns_name}"  # Using the ALB DNS name directly
+
+  tags = {
+    Name        = "${var.app_name}-site-url"
+    Environment = var.environment
+  }
+}
+
 # Allow ECS Task to read from Parameter Store
 resource "aws_iam_policy" "parameter_store_read" {
   name        = "${var.app_name}ParameterStoreRead"
@@ -706,6 +718,10 @@ resource "aws_ecs_task_definition" "auth_service" {
         {
           name      = "SKIP_OTP"
           valueFrom = aws_ssm_parameter.skip_otp.arn
+        },
+        {
+          name      = "SITE_URL"
+          valueFrom = aws_ssm_parameter.site_url.arn
         }
       ]
       logConfiguration = {
@@ -724,7 +740,7 @@ resource "aws_ecs_task_definition" "auth_service" {
         startPeriod = 120
       }
       # Reduced memory/CPU for t2.micro
-      memory            = 512  # Hard limit
+      memory            = 400  # Hard limit
       cpu               = 256  # Soft limit
     }
   ])
@@ -778,4 +794,41 @@ output "alb_dns_name" {
 output "ecr_repository_url" {
   value       = aws_ecr_repository.auth_service.repository_url
   description = "The URL of the ECR repository"
+}
+
+
+
+
+# Create the API Gateway HTTP API
+resource "aws_apigatewayv2_api" "auth_service_api" {
+  name          = "${var.app_name}-api"
+  protocol_type = "HTTP"
+}
+
+# Create a default stage
+resource "aws_apigatewayv2_stage" "auth_service_stage" {
+  api_id      = aws_apigatewayv2_api.auth_service_api.id
+  name        = "$default"
+  auto_deploy = true
+}
+
+# Create the integration to your public ALB using {proxy}
+resource "aws_apigatewayv2_integration" "auth_service_integration" {
+  api_id             = aws_apigatewayv2_api.auth_service_api.id
+  integration_type   = "HTTP_PROXY"
+  integration_method = "ANY"
+  integration_uri    = "http://${aws_lb.main.dns_name}/{proxy}"
+}
+
+# Create the route with {proxy+}
+resource "aws_apigatewayv2_route" "auth_service_route" {
+  api_id    = aws_apigatewayv2_api.auth_service_api.id
+  route_key = "ANY /{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.auth_service_integration.id}"
+}
+
+# Output the API Gateway URL
+output "api_gateway_url" {
+  value       = aws_apigatewayv2_api.auth_service_api.api_endpoint
+  description = "The HTTPS URL of the API Gateway"
 }

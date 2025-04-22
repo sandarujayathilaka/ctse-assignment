@@ -61,7 +61,7 @@ variable "cpu" {
 variable "memory" {
   description = "Memory for the task"
   type        = string
-  default     = "512"  # Minimum value
+  default     = "400"  # Minimum value
 }
 
 variable "instance_type" {

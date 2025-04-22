@@ -106,13 +106,8 @@ exports.login = async (req, res, next) => {
     // Find user by email
     const user = await User.findOne({ email }).select("+password");
 
-    // If no user found or password incorrect
-    if (!user || !(await user.matchPassword(password))) {
-      // If user exists, increment failed login attempts
-      if (user) {
-        await user.incrementLoginAttempts();
-      }
-
+    // If no user found
+    if (!user) {
       return res.status(401).json({
         success: false,
         message: "Invalid credentials",
@@ -126,6 +121,16 @@ exports.login = async (req, res, next) => {
         message:
           "Account locked due to too many failed login attempts. Try again later.",
         lockedUntil: user.lockedUntil,
+      });
+    }
+
+    // If password is incorrect
+    if (!(await user.matchPassword(password))) {
+      // If user exists, increment failed login attempts
+      await user.incrementLoginAttempts();
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
       });
     }
 

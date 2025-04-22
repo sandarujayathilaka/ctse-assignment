@@ -140,11 +140,6 @@ const verifyRefreshToken = async (req, res, next) => {
  * @param {...String} roles - Roles authorized to access this route
  * @returns {Function} Middleware function
  */
-/**
- * Middleware to authorize based on user role
- * @param {...String} roles - Roles authorized to access this route
- * @returns {Function} Middleware function
- */
 const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -166,39 +161,8 @@ const authorize = (...roles) => {
   };
 };
 
-/**
- * Middleware to verify OTP
- */
-const requireOtp = async (req, res, next) => {
-  // Skip OTP check in development mode if configured
-  if (
-    process.env.NODE_ENV === "development" &&
-    process.env.SKIP_OTP === "true"
-  ) {
-    return next();
-  }
-
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      message: "User not authenticated",
-    });
-  }
-
-  // Check if user has verified OTP
-  if (!req.user.otpVerified) {
-    return res.status(403).json({
-      success: false,
-      message: "OTP verification required",
-    });
-  }
-
-  next();
-};
-
 module.exports = {
   protect,
   authorize,
-  requireOtp,
   verifyRefreshToken,
 };
