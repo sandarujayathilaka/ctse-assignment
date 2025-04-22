@@ -86,7 +86,7 @@ app.get("/health", (req, res) => {
 
 // Datadog health check endpoint
 app.get("/datadog-health", (req, res) => {
-  res.status(200).json({ status: "Datadog monitoring is active" });
+  res.status(200).json({ status: "Datadog monitoring is active!" });
 });
 
 // API status endpoint
