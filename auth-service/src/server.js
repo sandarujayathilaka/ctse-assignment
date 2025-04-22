@@ -1,3 +1,5 @@
+require("./utils/datadog"); // Initialize tracer before importing other modules
+
 const app = require("./app");
 const config = require("./config");
 const connectDB = require("./config/database");

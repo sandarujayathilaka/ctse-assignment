@@ -111,7 +111,7 @@ resource "aws_security_group" "ecs_tasks" {
 
   ingress {
     protocol        = "tcp"
-    from_port       = 0  # Allow all ports
+    from_port       = 0 # Allow all ports
     to_port         = 65535
     security_groups = [aws_security_group.alb.id]
   }
@@ -391,7 +391,7 @@ resource "aws_ssm_parameter" "site_url" {
   name        = "/${var.app_name}/SITE_URL"
   description = "Site URL for email links"
   type        = "String"
-  value       = "http://${aws_lb.main.dns_name}"  # Using the ALB DNS name directly
+  value       = "http://${aws_lb.main.dns_name}" # Using the ALB DNS name directly
 
   tags = {
     Name        = "${var.app_name}-site-url"
@@ -433,14 +433,14 @@ resource "aws_iam_role_policy_attachment" "execution_parameter_store" {
 resource "aws_launch_template" "ecs" {
   name_prefix            = "${var.app_name}-ecs-"
   image_id               = data.aws_ami.amazon_linux_ecs.id
-  instance_type          = "t2.micro"  # Free tier eligible
+  instance_type          = "t2.micro" # Free tier eligible
   vpc_security_group_ids = [aws_security_group.ecs_tasks.id]
   key_name               = data.aws_key_pair.existing.key_name
-  
+
   iam_instance_profile {
     name = aws_iam_instance_profile.ecs.name
   }
-  
+
 
   # Set proper ECS agent configuration
   user_data = base64encode(<<EOF
@@ -458,21 +458,21 @@ EOF
   monitoring {
     enabled = true
   }
-  
+
   # EBS optimized if available
   ebs_optimized = true
-  
+
   # Block device mappings
   block_device_mappings {
     device_name = "/dev/xvda"
-    
+
     ebs {
-      volume_size = 30
-      volume_type = "gp3"
+      volume_size           = 30
+      volume_type           = "gp3"
       delete_on_termination = true
     }
   }
-  
+
   tag_specifications {
     resource_type = "instance"
     tags = {
@@ -480,7 +480,7 @@ EOF
       Environment = var.environment
     }
   }
-  
+
   lifecycle {
     create_before_destroy = true
   }
@@ -506,10 +506,10 @@ data "aws_ami" "amazon_linux_ecs" {
 resource "aws_autoscaling_group" "ecs" {
   name                = "${var.app_name}-ecs-asg"
   min_size            = 1
-  max_size            = 2  # Limit to 1 instance for free tier
+  max_size            = 2 # Limit to 1 instance for free tier
   desired_capacity    = 1
   vpc_zone_identifier = [aws_subnet.public_a.id, aws_subnet.public_b.id]
-  
+
   launch_template {
     id      = aws_launch_template.ecs.id
     version = "$Latest"
@@ -520,11 +520,11 @@ resource "aws_autoscaling_group" "ecs" {
     min_healthy_percentage = 50
     max_healthy_percentage = 150
   }
-  
+
   # Health check
   health_check_type         = "ELB"
   health_check_grace_period = 300
-  
+
   # Warm pool for faster scaling
   warm_pool {
     pool_state                  = "Stopped"
@@ -534,7 +534,7 @@ resource "aws_autoscaling_group" "ecs" {
       reuse_on_scale_in = true
     }
   }
-  
+
   tag {
     key                 = "Name"
     value               = "${var.app_name}-ecs"
@@ -605,7 +605,7 @@ resource "aws_lb_listener" "http" {
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "auth_service" {
   name              = "/ecs/${var.app_name}"
-  retention_in_days = 1  # Minimal retention to save costs
+  retention_in_days = 1 # Minimal retention to save costs
 
   tags = {
     Name        = "${var.app_name}-logs"
@@ -615,14 +615,14 @@ resource "aws_cloudwatch_log_group" "auth_service" {
 
 # ECS Task Definition - Modified for EC2 compatibility
 resource "aws_ecs_task_definition" "auth_service" {
-  family                   = var.app_name
+  family = var.app_name
   # EC2 launch type can use bridge network mode (more efficient than awsvpc for t2.micro)
-  network_mode             = "bridge"  
+  network_mode = "bridge"
   # Remove requires_compatibilities for EC2 launch type
-  cpu                      = var.cpu
-  memory                   = var.memory
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-  task_role_arn            = aws_iam_role.auth_service_task_role.arn
+  cpu                = var.cpu
+  memory             = var.memory
+  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn      = aws_iam_role.auth_service_task_role.arn
 
   container_definitions = jsonencode([
     {
@@ -632,7 +632,7 @@ resource "aws_ecs_task_definition" "auth_service" {
       portMappings = [
         {
           containerPort = var.container_port
-          hostPort      = 0  # Dynamic port mapping
+          hostPort      = 0 # Dynamic port mapping
           protocol      = "tcp"
         }
       ]
@@ -645,7 +645,7 @@ resource "aws_ecs_task_definition" "auth_service" {
           name  = "PORT"
           value = tostring(var.container_port)
         },
-         {
+        {
           name  = "DD_ENV"
           value = var.environment
         },
@@ -740,8 +740,8 @@ resource "aws_ecs_task_definition" "auth_service" {
         startPeriod = 120
       }
       # Reduced memory/CPU for t2.micro
-      memory            = 400  # Hard limit
-      cpu               = 256  # Soft limit
+      memory = 400 # Hard limit
+      cpu    = 256 # Soft limit
     }
   ])
 
@@ -753,15 +753,15 @@ resource "aws_ecs_task_definition" "auth_service" {
 
 # ECS Service - Modified for EC2 launch type
 resource "aws_ecs_service" "auth_service" {
-  name            = var.app_name
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.auth_service.arn
-  desired_count   = 1  # Reduced for Free Tier
-  launch_type     = "EC2"  # Changed from FARGATE to EC2
+  name                 = var.app_name
+  cluster              = aws_ecs_cluster.main.id
+  task_definition      = aws_ecs_task_definition.auth_service.arn
+  desired_count        = 1     # Reduced for Free Tier
+  launch_type          = "EC2" # Changed from FARGATE to EC2
   force_new_deployment = true  # Add this line
 
   # No need for network_configuration with bridge mode
-  
+
   load_balancer {
     target_group_arn = aws_lb_target_group.app.arn
     container_name   = var.app_name

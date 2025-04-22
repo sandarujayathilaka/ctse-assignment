@@ -49,25 +49,25 @@ variable "container_port" {
 variable "desired_count" {
   description = "Number of instances of the task to run"
   type        = number
-  default     = 1  # Reduced to 1 for free tier
+  default     = 1 # Reduced to 1 for free tier
 }
 
 variable "cpu" {
   description = "CPU units for the task"
   type        = string
-  default     = "256"  # Minimum value
+  default     = "256" # Minimum value
 }
 
 variable "memory" {
   description = "Memory for the task"
   type        = string
-  default     = "400"  # Minimum value
+  default     = "400" # Minimum value
 }
 
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t2.micro"  # Free tier eligible
+  default     = "t2.micro" # Free tier eligible
 }
 
 variable "ssh_public_key" {

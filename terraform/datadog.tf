@@ -3,7 +3,7 @@ terraform {
   required_providers {
     datadog = {
       source  = "datadog/datadog"
-      version = "~> 3.36.0"  # Use the latest version, you can check the current version on Terraform Registry
+      version = "~> 3.36.0" # Use the latest version, you can check the current version on Terraform Registry
     }
   }
 }
@@ -74,17 +74,17 @@ resource "aws_iam_role_policy_attachment" "execution_datadog_access" {
 
 # Datadog ECS integration
 resource "datadog_integration_aws" "main" {
-  account_id                       = data.aws_caller_identity.current.account_id
-  role_name                        = "DatadogAWSIntegrationRole"
-  metrics_collection_enabled       = true
-  resource_collection_enabled      = true
+  account_id                  = data.aws_caller_identity.current.account_id
+  role_name                   = "DatadogAWSIntegrationRole"
+  metrics_collection_enabled  = true
+  resource_collection_enabled = true
   account_specific_namespace_rules = {
-    ecs     = true
-    ec2     = true
-    lambda  = false
-    s3      = false
-    rds     = false
-    elb     = true
+    ecs    = true
+    ec2    = true
+    lambda = false
+    s3     = false
+    rds    = false
+    elb    = true
   }
 }
 
@@ -104,31 +104,31 @@ resource "datadog_monitor" "service_health" {
 
   notify_no_data    = true
   no_data_timeframe = 10
-  
+
   tags = ["service:auth-service", "env:${var.environment}"]
 }
 
 resource "datadog_monitor" "high_error_rate" {
-  name               = "Auth Service High Error Rate"
-  type               = "metric alert"
-  message            = "Auth Service has a high error rate. Notify: @devops-team"
-  
+  name    = "Auth Service High Error Rate"
+  type    = "metric alert"
+  message = "Auth Service has a high error rate. Notify: @devops-team"
+
   query = "sum(last_5m):sum:aws.applicationelb.httpcode_target_5xx{service:auth-service} / sum:aws.applicationelb.request_count{service:auth-service} * 100 > 5"
-  
+
   monitor_thresholds {
     warning  = 3
     critical = 5
   }
-  
+
   tags = ["service:auth-service", "env:${var.environment}"]
 }
 
 # Create a Datadog dashboard
 resource "datadog_dashboard" "auth_service" {
-  title        = "Auth Service Dashboard"
-  description  = "Dashboard for the Auth Service microservice"
-  layout_type  = "ordered"
-  
+  title       = "Auth Service Dashboard"
+  description = "Dashboard for the Auth Service microservice"
+  layout_type = "ordered"
+
   widget {
     alert_graph_definition {
       alert_id = datadog_monitor.service_health.id
@@ -136,7 +136,7 @@ resource "datadog_dashboard" "auth_service" {
       viz_type = "timeseries"
     }
   }
-  
+
   widget {
     alert_graph_definition {
       alert_id = datadog_monitor.high_error_rate.id
@@ -144,51 +144,51 @@ resource "datadog_dashboard" "auth_service" {
       viz_type = "timeseries"
     }
   }
-  
+
   widget {
     timeseries_definition {
       title = "API Request Count"
       request {
-        q = "sum:aws.applicationelb.request_count{service:auth-service}.as_count()"
+        q            = "sum:aws.applicationelb.request_count{service:auth-service}.as_count()"
         display_type = "line"
       }
       yaxis {
         scale = "linear"
-        min = "0"
+        min   = "0"
       }
     }
   }
-  
+
   widget {
     timeseries_definition {
       title = "API Response Time"
       request {
-        q = "avg:aws.applicationelb.target_response_time.average{service:auth-service} * 1000"
+        q            = "avg:aws.applicationelb.target_response_time.average{service:auth-service} * 1000"
         display_type = "line"
       }
       yaxis {
         scale = "linear"
-        min = "0"
+        min   = "0"
         label = "ms"
       }
     }
   }
-  
+
   widget {
     timeseries_definition {
       title = "CPU and Memory Usage"
       request {
-        q = "avg:aws.ecs.service.cpu_utilization{service:auth-service}"
+        q            = "avg:aws.ecs.service.cpu_utilization{service:auth-service}"
         display_type = "line"
       }
       request {
-        q = "avg:aws.ecs.service.memory_utilization{service:auth-service}"
+        q            = "avg:aws.ecs.service.memory_utilization{service:auth-service}"
         display_type = "line"
       }
       yaxis {
         scale = "linear"
-        min = "0"
-        max = "100"
+        min   = "0"
+        max   = "100"
         label = "%"
       }
     }
