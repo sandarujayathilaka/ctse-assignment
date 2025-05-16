@@ -60,7 +60,7 @@ jobs:
             -Dsonar.alm.enabled=false
 
   build-and-push-image:
-    needs: build-and-test
+    needs: test-and-scan
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
