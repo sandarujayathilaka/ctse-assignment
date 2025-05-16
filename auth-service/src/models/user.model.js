@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 const UserSchema = new mongoose.Schema(
   {
@@ -87,7 +88,10 @@ UserSchema.methods.matchPassword = async function (enteredPassword) {
 // Generate and store OTP for the user
 UserSchema.methods.generateOTP = function () {
   // Generate a 6-digit OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  // const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  // Generate a secure 6-digit OTP using crypto
+  const buffer = crypto.randomBytes(3);
+  const otp = (buffer.readUIntBE(0, 3) % 1000000).toString().padStart(6, "0");
 
   // Store OTP with 10 minute expiration
   this.otp = {

@@ -17,10 +17,6 @@ FROM node:18-alpine
 WORKDIR /usr/src/app
 
 # Install Datadog APM agent with optimized settings
-ENV DD_AGENT_HOST=datadog-agent
-ENV DD_TRACE_SAMPLE_RATE=0.5
-ENV DD_PROFILING_ENABLED=false
-ENV DD_RUNTIME_METRICS_ENABLED=false
 RUN npm install --global dd-trace
 
 # Create a non-root user

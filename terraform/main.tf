@@ -446,7 +446,7 @@ resource "aws_launch_template" "ecs" {
   user_data = base64encode(<<EOF
 #!/bin/bash
 echo ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config
-echo ECS_RESERVED_MEMORY=128 >> /etc/ecs/ecs.config
+echo ECS_RESERVED_MEMORY=96 >> /etc/ecs/ecs.config
 echo ECS_CONTAINER_STOP_TIMEOUT=30s >> /etc/ecs/ecs.config
 echo ECS_DISABLE_PRIVILEGED=true >> /etc/ecs/ecs.config
 echo ECS_ENABLE_SPOT_INSTANCE_DRAINING=false >> /etc/ecs/ecs.config
@@ -654,16 +654,44 @@ resource "aws_ecs_task_definition" "auth_service" {
           value = var.app_name
         },
         {
+          name  = "DD_VERSION"
+          value = "1.0.0"
+        },
+        {
           name  = "DD_LOGS_INJECTION"
           value = "true"
         },
         {
-          name  = "DD_TRACE_ENABLED"
+          name  = "DD_TRACE_SAMPLE_RATE"
+          value = "1"
+        },
+        {
+          name  = "DD_RUNTIME_METRICS_ENABLED"
           value = "true"
         },
         {
           name  = "DD_PROFILING_ENABLED"
           value = "true"
+        },
+        {
+          name  = "DD_APM_ENABLED"
+          value = "true"
+        },
+        {
+          name  = "DD_AGENT_HOST"
+          value = "localhost" # Point to Datadog Agent sidecar
+        },
+        {
+          name  = "DD_TRACE_AGENT_PORT"
+          value = "8126"
+        },
+        {
+          name  = "DD_TRACE_ANALYTICS_ENABLED"
+          value = "true"
+        },
+        {
+          name  = "DD_TRACE_GLOBAL_TAGS"
+          value = "service:auth-service,env:${var.environment}"
         }
       ]
       secrets = [
@@ -740,9 +768,94 @@ resource "aws_ecs_task_definition" "auth_service" {
         startPeriod = 120
       }
       # Reduced memory/CPU for t2.micro
-      memory = 400 # Hard limit
-      cpu    = 256 # Soft limit
-    }
+      memory = 350 # Hard limit
+      cpu    = 196 # Soft limit
+      # dependsOn = [{
+      #   containerName = "datadog-agent"
+      #   condition     = "START"
+      # }]
+    },
+    # {
+    #   name      = "datadog-agent"
+    #   image     = "public.ecr.aws/datadog/agent:latest"
+    #   essential = true
+    #   environment = [
+    #     {
+    #       name  = "DD_API_KEY"
+    #       value = var.datadog_api_key
+    #     },
+    #     {
+    #       name  = "DD_SITE"
+    #       value = "datadoghq.com"
+    #     },
+    #     {
+    #       name  = "DD_ECS_COLLECT"
+    #       value = "true"
+    #     },
+    #     {
+    #       name  = "DD_APM_ENABLED"
+    #       value = "true"
+    #     },
+    #     {
+    #       name  = "DD_LOGS_ENABLED"
+    #       value = "true"
+    #     },
+    #     {
+    #       name  = "DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL"
+    #       value = "true"
+    #     },
+    #     {
+    #       name  = "DD_AC_EXCLUDE"
+    #       value = "name:datadog-agent"
+    #     },
+    #     {
+    #       name  = "DD_DOGSTATSD_NON_LOCAL_TRAFFIC"
+    #       value = "true"
+    #     },
+    #     {
+    #       name  = "DD_ENV"
+    #       value = var.environment
+    #     },
+    #     {
+    #       name  = "DD_PROCESS_AGENT_ENABLED"
+    #       value = "true"
+    #     },
+    #     {
+    #       name  = "DD_DOCKER_LABELS_AS_TAGS"
+    #       value = "{\"com.amazonaws.ecs.task-definition-family\":\"task_family\",\"com.amazonaws.ecs.cluster\":\"cluster_name\"}"
+    #     },
+    #     {
+    #       name  = "DD_CONTAINER_LABELS_AS_TAGS"
+    #       value = "{\"com.amazonaws.ecs.task-definition-family\":\"task_family\",\"com.amazonaws.ecs.cluster\":\"cluster_name\"}"
+    #     },
+    #     {
+    #       name  = "DD_TAGS"
+    #       value = "env:${var.environment} service:${var.app_name}"
+    #     }
+    #   ]
+    #   portMappings = [
+    #     {
+    #       containerPort = 8126
+    #       hostPort      = 8126
+    #       protocol      = "tcp"
+    #     },
+    #     {
+    #       containerPort = 8125
+    #       hostPort      = 8125
+    #       protocol      = "udp"
+    #     }
+    #   ]
+    #   memory = 256
+    #   cpu    = 128
+    #   logConfiguration = {
+    #     logDriver = "awslogs"
+    #     options = {
+    #       "awslogs-group"         = aws_cloudwatch_log_group.auth_service.name
+    #       "awslogs-region"        = var.aws_region
+    #       "awslogs-stream-prefix" = "datadog-agent"
+    #     }
+    #   }
+    # }
   ])
 
   tags = {
@@ -750,6 +863,7 @@ resource "aws_ecs_task_definition" "auth_service" {
     Environment = var.environment
   }
 }
+
 
 # ECS Service - Modified for EC2 launch type
 resource "aws_ecs_service" "auth_service" {
