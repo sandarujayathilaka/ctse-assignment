@@ -391,7 +391,7 @@ resource "aws_ssm_parameter" "site_url" {
   name        = "/${var.app_name}/SITE_URL"
   description = "Site URL for email links"
   type        = "String"
-  value       = "http://${aws_lb.main.dns_name}" # Using the ALB DNS name directly
+  value       = aws_apigatewayv2_api.auth_service_api.api_endpoint
 
   tags = {
     Name        = "${var.app_name}-site-url"

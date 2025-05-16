@@ -5,9 +5,12 @@ const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const cookieParser = require("cookie-parser");
 const path = require("path");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./utils/swagger");
 
 const authRoutes = require("./routes/auth.routes");
 const adminRoutes = require("./routes/admin.routes");
+const systemRoutes = require("./routes/system.routes");
 const errorHandler = require("./middleware/errorHandler");
 const logger = require("./utils/logger");
 const config = require("./config");
@@ -75,29 +78,35 @@ if (!fs.existsSync(emailTemplatesDir)) {
   fs.mkdirSync(emailTemplatesDir, { recursive: true });
 }
 
+// Swagger Documentation
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    customCss: ".swagger-ui .topbar { display: none }",
+    customSiteTitle: "Auth Microservice API Documentation",
+    swaggerOptions: {
+      withCredentials: true,
+      tryItOutEnabled: true,
+      persistAuthorization: true,
+      displayRequestDuration: true,
+    },
+  })
+);
+
+// Serve Swagger JSON
+app.get("/swagger.json", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpec);
+});
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 
-// Health check endpoint
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
-});
-
-// Datadog health check endpoint
-app.get("/datadog-health", (req, res) => {
-  res.status(200).json({ status: "Datadog monitoring is active!" });
-});
-
-// API status endpoint
-app.get("/api/status", (req, res) => {
-  res.status(200).json({
-    status: "operational",
-    version: process.env.npm_package_version || "1.0.0",
-    environment: config.env,
-    timestamp: new Date().toISOString(),
-  });
-});
+// System routes - handle health and status endpoints
+app.use("/", systemRoutes);
 
 // 404 handler
 app.use((req, res) => {
