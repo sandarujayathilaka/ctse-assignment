@@ -46,7 +46,7 @@ jobs:
         with:
           args: --severity-threshold=high ./auth-service
 
-      # Add SonarCloud scan
+      # SonarCloud scan step
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5.0.0
         env:
