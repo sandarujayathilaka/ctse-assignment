@@ -13,7 +13,7 @@ on:
       - ".github/workflows/ci-cd.yml"
 
 jobs:
-  test-and-scan:
+  test-and-scan-project:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -60,7 +60,7 @@ jobs:
             -Dsonar.alm.enabled=false
 
   build-and-push-image:
-    needs: test-and-scan
+    needs: test-and-scan-project
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
