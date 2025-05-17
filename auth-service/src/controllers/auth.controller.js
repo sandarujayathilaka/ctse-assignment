@@ -25,7 +25,7 @@ const generateRefreshToken = (id) => {
 // @access  Public
 exports.register = async (req, res, next) => {
   try {
-    // Check for validation errors
+    // Check validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
